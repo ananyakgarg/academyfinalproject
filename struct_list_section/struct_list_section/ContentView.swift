@@ -249,7 +249,7 @@ struct check_plus: View{
     
 struct add_button_view: View{
     @State var add_food_press: Bool = true
-    var animation_amount: Int = 1
+    var animation_amount: Int = 2
     
     
     var body: some View{
