@@ -71,9 +71,6 @@ private var remaining_cals: Int {
 
 
 
-
-
-
 var body: some View {
     NavigationView{
         VStack{
@@ -122,11 +119,7 @@ var body: some View {
             .padding(.bottom)
             
             
-            
-//            NavigationLink(destination: addBreakfast().navigationTitle("Breakfast").navigationBarTitleDisplayMode(.inline)
-//                           ,isActive: $add_food){
-//                EmptyView()
-//            }
+
         
         List(){
             ForEach($meals){ $meal in
@@ -146,6 +139,7 @@ var body: some View {
                         
                         
                     }
+
                     
                     
                     NavigationLink(destination: {addBreakfast(meal: $meal)}
@@ -179,7 +173,7 @@ var body: some View {
                 selection: $date,
                 displayedComponents: [.date]
                 )
-                // Ask ab date picker styling and text crypting
+
                     .labelsHidden()
             }
             ToolbarItem(placement: .automatic){
@@ -306,22 +300,7 @@ var body: some View{
                         food.id == selected_food.id
                     }))
                     
-//                    Button (action: {
-//                        add_food_button.toggle()
-//                    }, label: {
-//
-//
-//                        circle_plus()
-//
-//
-//                    })
-//                    .padding()
-                    
-//                    Image(systemName: "plus.circle")
-//                        .resizable()
-//                        .frame(width: 30, height: 30)
-//                        .foregroundColor(.blue)
-//                        .padding()
+
                 }
             
             )
