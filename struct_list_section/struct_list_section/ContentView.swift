@@ -7,6 +7,20 @@
 
 import SwiftUI
 
+struct Meal: Identifiable {
+let name: String
+    var foods: [Food]
+var meal_cals: Int {
+    var result: Int = 0
+    for Food in foods {
+        result += Food.calories
+    }
+    return result
+}
+let id = UUID()
+}
+
+
 struct ContentView: View {
 
 @State private var add_food: Bool = false
@@ -18,6 +32,7 @@ struct ContentView: View {
 private var goal_cals: Int = 2000
 private var food_cals: Int = 1500
 private var exercise_cals: Int = 150
+    
 var calories_eaten: Int {
         var result: Int = 0
         for meal in meals{
@@ -37,44 +52,26 @@ private var remaining_cals: Int {
 // make meal state property, append when new food added, // pass binding
 @State private var meals: [Meal] = [
     Meal(name: "Breakfast",
-         foods: [Food(calories: 150, name: "Greek Yogurt", company: "Dannon", amount: 1, unit: "cup"),
-                 Food(calories: 200, name: "Granola", company: "Costco", amount: 1, unit: "cup"),
-                 Food(calories: 300, name: "Cheese", company: "Walmart", amount: 1, unit: "cup")
+         foods: [Food(name: "Greek Yogurt", company: "Dannon", amount: 1, calories: 150, unit: "cup"),
+                 Food(name: "Granola", company: "Costco", amount: 1, calories: 200,  unit: "cup"),
+                 Food(name: "Cheese", company: "Walmart", amount: 1, calories: 300,  unit: "cup")
                 ]),
     Meal(name: "Lunch",
-         foods: [Food(calories: 200, name: "Quarter Pounder", company: "McDonald's", amount: 1, unit: "burger"),
-                 Food(calories: 300, name: "Fries", company: "McDonald's", amount: 1, unit: "small"),
-                 Food(calories: 0, name: "Diet Coke", company: "Coca-Cola", amount: 1, unit: "Large")
+         foods: [Food(name: "Quarter Pounder", company: "McDonald's", amount: 1, calories: 200, unit: "burger"),
+                 Food( name: "Fries", company: "McDonald's", amount: 1, calories: 300, unit: "small"),
+                 Food(name: "Diet Coke", company: "Coca-Cola", amount: 1, calories: 0, unit: "Large")
          ]),
     Meal(name: "Dinner",
-         foods: [Food(calories: 450, name: "NY Strip Steak", company: "Harris Teeter", amount: 1, unit: "steak"),
-                 Food(calories: 300, name: "Fries", company: "Tyson", amount: 3, unit: "ounces")
+         foods: [Food(name: "NY Strip Steak", company: "Harris Teeter", amount: 1, calories: 450,  unit: "steak"),
+                 Food(name: "Fries", company: "Tyson", amount: 3, calories: 300,  unit: "ounces")
          ]),
 ]
 
 
 
-struct Food: Identifiable {
-var calories: Int
-var name: String
-var company: String
-var amount: Int
-var unit: String
-let id = UUID()
-}
 
-struct Meal: Identifiable {
-let name: String
-let foods: [Food]
-var meal_cals: Int {
-    var result: Int = 0
-    for Food in foods {
-        result += Food.calories
-    }
-    return result
-}
-let id = UUID()
-}
+
+
 
 
 var body: some View {
@@ -126,13 +123,13 @@ var body: some View {
             
             
             
-            NavigationLink(destination: addBreakfast().navigationTitle("Breakfast").navigationBarTitleDisplayMode(.inline)
-                           ,isActive: $add_food){
-                EmptyView()
-            }
+//            NavigationLink(destination: addBreakfast().navigationTitle("Breakfast").navigationBarTitleDisplayMode(.inline)
+//                           ,isActive: $add_food){
+//                EmptyView()
+//            }
         
         List(){
-            ForEach(meals){ meal in
+            ForEach($meals){ $meal in
                 Section{
                     ForEach(meal.foods){ food in
                         HStack{
@@ -150,9 +147,15 @@ var body: some View {
                         
                     }
                     
-                    Button("Add Food"){
-                        add_food.toggle()
+                    
+                    NavigationLink(destination: {addBreakfast(meal: $meal)}
+                                   ){
+                        
+                        Text("ADD FOOD")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 18, weight: .bold))
                     }
+                                   
                 }
                 header: {Text(meal.name)
                         .foregroundColor(.black)
@@ -202,9 +205,10 @@ var body: some View {
         .listStyle(.grouped)
         
     }
+}
 
 
-struct AddFood: Identifiable {
+struct Food: Identifiable {
 
 var name: String
 var company: String
@@ -248,25 +252,20 @@ struct check_plus: View{
 }
     
 struct add_button_view: View{
-    @State var add_food_press: Bool = true
+    
+    let action:() -> Void
+    var is_added: Bool
+    
     var animation_amount: Int = 2
     
     
     var body: some View{
-        Button(action: {
-
-                
-                add_food_press.toggle()
-                
-            
-            
-            
-        }, label: {
-            if add_food_press == true{
-                circle_plus()
+        Button(action: action, label: {
+            if is_added == true{
+                check_plus()
             }
             else{
-                check_plus()
+                circle_plus()
             }
             
         })
@@ -277,12 +276,9 @@ struct add_button_view: View{
 }
 
     
-struct addFoodView: View{
-var name: String
-var calories: Int
-var amount: Int
-var unit: String
-var company: String
+struct FoodView: View{
+    @Binding var meal: Meal
+    let food: Food
     // Temp Var:
     @State var add_food_button: Bool = true
     
@@ -295,15 +291,20 @@ var body: some View{
             .overlay(
                 HStack{
                     VStack(alignment: .leading){
-                        Text(name)
-                        Text("\(String(calories)) cal, \(amount) \(unit) \(company)")
+                        Text(food.name)
+                        Text("\(String(food.calories)) cal, \(food.amount) \(food.unit) \(food.company)")
                             .font(.system(size: 16))
                             .foregroundColor(.gray)
                     }
                     .padding()
                     Spacer()
                     
-                    add_button_view()
+                    add_button_view(action: {
+                        meal.foods.append(food)
+                        
+                    }, is_added: meal.foods.contains(where: { selected_food in
+                        food.id == selected_food.id
+                    }))
                     
 //                    Button (action: {
 //                        add_food_button.toggle()
@@ -330,7 +331,7 @@ var body: some View{
 }
 }
     
-struct addFoodHeader: View{
+struct FoodHeader: View{
     @State var show_frequent: Bool = true
     var body: some View{
         
@@ -365,54 +366,59 @@ struct addFoodHeader: View{
 
     
     
-    
+
 
 struct addBreakfast: View{
+    public init(meal: Binding<Meal>) {
+    self._meal = meal
+    }
     
-    @State private var add_foods_list: [AddFood] = [
-        AddFood(name: "Marinara Sauce",
+    
+    @Binding var meal: Meal
+    @State private var add_foods_list: [Food] = [
+        Food(name: "Marinara Sauce",
                 company: "Homemade",
                 amount: 1, calories: 100,
                 unit: "cup"),
-        AddFood(name: "Green Grapes",
+        Food(name: "Green Grapes",
                 company: "Costco",
                 amount: 1,
                 calories: 60,
                 unit: "oz"),
-        AddFood(name: "Sandwich Bread",
+        Food(name: "Sandwich Bread",
                 company: "Nature's Own",
                 amount: 2, calories: 70,
                 unit: "slices"),
-        AddFood(name: "Cooca Puffs", company: "Kellog's", amount: 1, calories: 133, unit: "cup"),
-        AddFood(name: "Skim Milk", company: "Fairlife", amount: 1, calories: 80, unit: "cup"),
-        AddFood(name: "Marinara Sauce",
+        Food(name: "Cooca Puffs", company: "Kellog's", amount: 1, calories: 133, unit: "cup"),
+        Food(name: "Skim Milk", company: "Fairlife", amount: 1, calories: 80, unit: "cup"),
+        Food(name: "Marinara Sauce",
                 company: "Homemade",
                 amount: 1, calories: 100,
                 unit: "cup"),
-        AddFood(name: "Green Grapes",
+        Food(name: "Green Grapes",
                 company: "Costco",
                 amount: 1,
                 calories: 60,
                 unit: "oz"),
-        AddFood(name: "Sandwich Bread",
+        Food(name: "Sandwich Bread",
                 company: "Nature's Own",
                 amount: 2, calories: 70,
                 unit: "slices"),
-        AddFood(name: "Cooca Puffs", company: "Kellog's", amount: 1, calories: 133, unit: "cup"),
-        AddFood(name: "Marinara Sauce",
+        Food(name: "Cooca Puffs", company: "Kellog's", amount: 1, calories: 133, unit: "cup"),
+        Food(name: "Marinara Sauce",
                 company: "Homemade",
                 amount: 1, calories: 100,
                 unit: "cup"),
-        AddFood(name: "Green Grapes",
+        Food(name: "Green Grapes",
                 company: "Costco",
                 amount: 1,
                 calories: 60,
                 unit: "oz"),
-        AddFood(name: "Sandwich Bread",
+        Food(name: "Sandwich Bread",
                 company: "Nature's Own",
                 amount: 2, calories: 70,
                 unit: "slices"),
-        AddFood(name: "Cooca Puffs", company: "Kellog's", amount: 1, calories: 133, unit: "cup")
+        Food(name: "Cooca Puffs", company: "Kellog's", amount: 1, calories: 133, unit: "cup")
         
     ]
     
@@ -472,11 +478,11 @@ struct addBreakfast: View{
                 
                 Spacer()
                
-            Section(header: addFoodHeader()){
+            Section(header: FoodHeader()){
                     ScrollView(){
                         ForEach(add_foods_list, id: \.id){
                             food in
-                            addFoodView(name: food.name, calories: food.calories, amount: food.amount, unit: food.unit, company: food.company)
+                            FoodView(meal: $meal, food: food)
                             
                         }
                     }
@@ -487,14 +493,18 @@ struct addBreakfast: View{
             
             
         }
+        .navigationTitle(meal.name)
+        .navigationBarTitleDisplayMode(.inline)
         
         
             
         
             }
-        }
         
-    }
+        }
+    
+        
+    
 
 
 
